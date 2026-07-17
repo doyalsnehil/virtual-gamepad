@@ -1,0 +1,15 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.8.9", features = ["ws"] }
+evdev = "0.13.2"
+futures-util = "0.3.32"
+get_if_addrs = "0.5.3"
+libc = "0.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+tokio = { version = "1.52.4", features = ["full"] }
+tower-http = { version = "0.7.0", features = ["fs"] }

@@ -1,0 +1,350 @@
+:root {
+    --bg-color: #0f1115;
+    --btn-bg: rgba(255, 255, 255, 0.05);
+    --btn-bg-active: rgba(255, 255, 255, 0.2);
+    --btn-border: rgba(255, 255, 255, 0.1);
+    --text-color: #ffffff;
+    --accent-color: #4CAF50;
+    --danger-color: #f44336;
+    --glow-color: rgba(76, 175, 80, 0.3);
+}
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    touch-action: none; /* Crucial to prevent zooming/scrolling */
+}
+
+/* Connection Overlay */
+.overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 17, 21, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2rem 3rem;
+    border-radius: 20px;
+    border: 1px solid var(--btn-border);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.loader {
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto 0;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.status-indicator {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--danger-color);
+    box-shadow: 0 0 10px var(--danger-color);
+    z-index: 100;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.status-indicator.connected {
+    background-color: var(--accent-color);
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+.edit-btn {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid var(--btn-border);
+    padding: 8px 16px;
+    border-radius: 20px;
+    z-index: 100;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#edit-toolbar {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 100;
+}
+
+.save-btn {
+    background: var(--accent-color);
+    color: white;
+    border: 1px solid var(--btn-border);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+.reset-btn {
+    background: var(--danger-color);
+    color: white;
+    border: 1px solid var(--btn-border);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(244,67,54,0.3);
+}
+
+.slider-container {
+    background: rgba(0, 0, 0, 0.85);
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.slider-container input[type="range"] {
+    width: 100px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+body.edit-mode .control-item {
+    outline: 2px dashed rgba(255,255,255,0.3);
+    cursor: move;
+}
+
+body.edit-mode .control-item.selected-drag {
+    outline: 2px solid var(--accent-color);
+    box-shadow: 0 0 15px var(--glow-color);
+}
+
+/* Main Container */
+.controls-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.control-item {
+    position: absolute;
+    touch-action: none;
+    transform: scale(var(--scale, 1));
+    transform-origin: center center;
+    will-change: transform; /* GPU compositing hint */
+}
+
+/* Buttons General Styling — NO transitions for max responsiveness */
+button {
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    border-radius: 50%;
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), 0 5px 15px rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    /* No transition — instant feedback for gaming */
+}
+
+button.active {
+    background: var(--btn-bg-active);
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 2px 5px rgba(0,0,0,0.5);
+}
+
+/* Joysticks */
+.joystick-zone {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#ls-zone { top: 35%; left: 15%; transform: translateY(-50%) scale(var(--scale, 1)); }
+#rs-zone { top: 65%; right: 25%; transform: translateY(-50%) scale(var(--scale, 1)); }
+
+/* Action Buttons (ABXY) */
+.action-buttons {
+    width: 170px;
+    height: 170px;
+    top: 35%; right: 15%;
+    transform: translateY(-50%) scale(var(--scale, 1));
+}
+.action-btn {
+    position: absolute;
+    width: 65px;
+    height: 65px;
+    font-size: 24px;
+}
+.y-btn { top: 0; left: 52.5px; color: #fbc02d; }
+.a-btn { bottom: 0; left: 52.5px; color: #4CAF50; }
+.x-btn { left: 0; top: 52.5px; color: #2196F3; }
+.b-btn { right: 0; top: 52.5px; color: #f44336; }
+
+/* D-Pad */
+.dpad-container {
+    width: 140px;
+    height: 140px;
+    top: 65%; left: 25%;
+    transform: translateY(-50%) scale(var(--scale, 1));
+    background: var(--btn-bg);
+    border-radius: 50%;
+    position: relative;
+}
+.dpad-btn {
+    position: absolute;
+    background: rgba(0,0,0,0.2);
+    border-radius: 5px;
+    border: none;
+    box-shadow: none;
+}
+.dpad-btn.active {
+    background: rgba(255,255,255,0.2);
+    transform: none;
+}
+.up { top: 10px; left: 45px; width: 50px; height: 40px; }
+.down { bottom: 10px; left: 45px; width: 50px; height: 40px; }
+.left { left: 10px; top: 45px; width: 40px; height: 50px; }
+.right { right: 10px; top: 45px; width: 40px; height: 50px; }
+.dpad-center {
+    position: absolute;
+    top: 50px; left: 50px; width: 40px; height: 40px;
+    background: rgba(0,0,0,0.3);
+}
+
+/* Shoulder Buttons — each is its own control-item */
+.shoulder-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#lt-btn { top: 15px; left: 10%; }
+#lb-btn { top: 15px; left: calc(10% + 90px); }
+#rt-btn { top: 15px; right: 10%; }
+#rb-btn { top: 15px; right: calc(10% + 90px); }
+
+.trigger-btn, .bumper-btn {
+    width: 80px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+.trigger-btn { height: 50px; }
+
+/* Menu Buttons (Start, Select, Guide) */
+.menu-buttons {
+    top: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+.menu-btn {
+    width: 40px;
+    height: 25px;
+    border-radius: 12px;
+    font-size: 10px;
+}
+.guide-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #333;
+    color: white;
+    font-size: 24px;
+    border: 2px solid #555;
+}
+
+/* Player Indicators */
+.player-leds {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+}
+.led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.led.active {
+    background: #4CAF50;
+    box-shadow: 0 0 10px #4CAF50;
+}
+
+/* Fullscreen Lock Overlay */
+#fs-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+#fs-btn {
+    padding: 20px 40px;
+    font-size: 24px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}

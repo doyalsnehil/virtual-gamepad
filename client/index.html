@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Virtual Gamepad</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="fs-overlay">
+        <h2 style="margin-bottom: 20px;">Welcome to Virtual Gamepad</h2>
+        <p style="margin-bottom: 40px; color: #ccc;">Please rotate your phone horizontally for the best experience.</p>
+        <button id="fs-btn">Enter Gamepad Mode</button>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="modal">
+            <h2 id="overlay-title">Connecting...</h2>
+            <p id="overlay-desc">Waiting for server connection...</p>
+            <div class="loader" id="overlay-loader"></div>
+            <button id="install-btn" style="display: none; margin-top: 20px; padding: 10px 20px; border-radius: 10px; background: #4CAF50; color: white; border: none; font-size: 16px; cursor: pointer; width: 100%;">Install App</button>
+        </div>
+    </div>
+
+    <button id="edit-btn" class="edit-btn">Edit Layout</button>
+    <div id="edit-toolbar" class="hidden">
+        <button id="save-btn" class="save-btn">Save Layout</button>
+        <button id="reset-btn" class="reset-btn">Reset Layout</button>
+        <div class="slider-container">
+            <label for="size-slider">Size</label>
+            <input type="range" id="size-slider" min="0.5" max="2" step="0.1" value="1">
+        </div>
+    </div>
+    
+    <div id="status" class="status-indicator"></div>
+
+    <div class="controls-container" id="controls-container">
+        <!-- Joysticks -->
+        <div id="ls-zone" class="joystick-zone control-item" data-id="ls-zone"></div>
+        <div id="rs-zone" class="joystick-zone control-item" data-id="rs-zone"></div>
+        
+        <!-- D-Pad -->
+        <div id="dpad" class="control-item dpad-container" data-id="dpad">
+            <button class="dpad-btn up" data-key="UP"></button>
+            <button class="dpad-btn right" data-key="RIGHT"></button>
+            <button class="dpad-btn down" data-key="DOWN"></button>
+            <button class="dpad-btn left" data-key="LEFT"></button>
+            <div class="dpad-center"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="action-buttons" class="control-item action-buttons" data-id="action-buttons">
+            <button class="action-btn a-btn" data-key="A">A</button>
+            <button class="action-btn b-btn" data-key="B">B</button>
+            <button class="action-btn x-btn" data-key="X">X</button>
+            <button class="action-btn y-btn" data-key="Y">Y</button>
+        </div>
+
+        <!-- Each shoulder button is its own control-item for independent placement/sizing -->
+        <div id="lt-btn" class="control-item shoulder-item" data-id="lt-btn">
+            <button class="trigger-btn" data-key="LT">LT</button>
+        </div>
+        <div id="lb-btn" class="control-item shoulder-item" data-id="lb-btn">
+            <button class="bumper-btn" data-key="LB">LB</button>
+        </div>
+        <div id="rt-btn" class="control-item shoulder-item" data-id="rt-btn">
+            <button class="trigger-btn" data-key="RT">RT</button>
+        </div>
+        <div id="rb-btn" class="control-item shoulder-item" data-id="rb-btn">
+            <button class="bumper-btn" data-key="RB">RB</button>
+        </div>
+        
+        <!-- Menu Buttons -->
+        <div id="menu-buttons" class="control-item menu-buttons" data-id="menu-buttons">
+            <button class="menu-btn" data-key="SELECT">Sel</button>
+            <button class="guide-btn" data-key="MODE">X</button>
+            <button class="menu-btn" data-key="START">Str</button>
+        </div>
+    </div> <!-- end controls-container -->
+
+    <!-- Player Indicators (outside controls so they don't get drag/edit treatment) -->
+    <div class="player-leds">
+        <div class="led" id="led-1"></div>
+        <div class="led" id="led-2"></div>
+        <div class="led" id="led-3"></div>
+        <div class="led" id="led-4"></div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+        
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+    </script>
+</body>
+</html>
