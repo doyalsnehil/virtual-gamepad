@@ -457,14 +457,10 @@ async fn handle_socket(socket: WebSocket, addr: SocketAddr, state: Arc<AppState>
                                 if msg_type == 0 {
                                     if let Some(key_code) = get_key_from_id(code_id) {
                                         events.push(evdev::InputEvent::new(evdev::EventType::KEY.0, key_code.code(), value));
-                                        println!("[Binary Input] Type: Button, CodeID: {}, Value: {}", code_id, value);
                                     }
                                 } else if msg_type == 1 {
                                     if let Some(axis_code) = get_axis_from_id(code_id) {
                                         events.push(evdev::InputEvent::new(evdev::EventType::ABSOLUTE.0, axis_code.0, value));
-                                        // To prevent spamming the console at 120Hz, only log axis events occasionally or just let them spam.
-                                        // For full debug, we'll log everything:
-                                        println!("[Binary Input] Type: Axis, CodeID: {}, Value: {}", code_id, value);
                                     }
                                 }
                                 if !events.is_empty() {
@@ -502,8 +498,7 @@ async fn handle_socket(socket: WebSocket, addr: SocketAddr, state: Arc<AppState>
                                 }
                                 break;
                             }
-                            let id = sanitize_device_id(&raw_id);
-                            println!("Device '{}' requesting connection from {}", id, addr);
+                            let id = sanitize_device_id(&raw_id);                                // println!("Device '{}' requesting connection from {}", id, addr);
 
                             let mut clients = state.clients.lock().await;
                             let is_trusted = state.trusted_devices.lock().await.contains(&id);
@@ -521,7 +516,7 @@ async fn handle_socket(socket: WebSocket, addr: SocketAddr, state: Arc<AppState>
                                         device_tx = Some(dtx);
                                         ff_task = Some(ft);
                                         slot = Some(free_slot);
-                                        println!("Auto-approved '{}' as Player {}", id, free_slot);
+                                        // println!("Auto-approved '{}' as Player {}", id, free_slot);
                                     }
                                     Err(e) => eprintln!("Failed to create device for {}: {}", id, e),
                                 }
@@ -575,7 +570,7 @@ async fn handle_socket(socket: WebSocket, addr: SocketAddr, state: Arc<AppState>
                                             client.ff_task = Some(ft);
                                             client.approved = true;
                                             client.player_slot = Some(free_slot);
-                                            println!("Approved '{}' as Player {}", target_id, free_slot);
+                                            // println!("Approved '{}' as Player {}", target_id, free_slot);
                                         }
                                         Err(e) => eprintln!("Failed to create device: {}", e),
                                     }
@@ -669,6 +664,6 @@ async fn handle_socket(socket: WebSocket, addr: SocketAddr, state: Arc<AppState>
         }
         drop(clients);
         broadcast_dashboard_state(&state).await;
-        println!("Client {} disconnected. Virtual device destroyed.", addr);
+        // println!("Client {} disconnected. Virtual device destroyed.", addr);
     }
 }
