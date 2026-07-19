@@ -29,6 +29,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onSizeChanged
@@ -48,6 +49,8 @@ val ColorA = Color(0xFF4CAF50)
 val ColorB = Color(0xFFF44336)
 val ColorX = Color(0xFF2196F3)
 val ColorY = Color(0xFFFBC02D)
+
+val LocalIsEditMode = androidx.compose.runtime.compositionLocalOf { false }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -310,7 +313,7 @@ fun AnalogSlider(type: SliderType, label: String, onValue: (Short) -> Unit) {
             .clip(RoundedCornerShape(30.dp))
             .background(Color(0x33FFFFFF))
             .border(2.dp, Color(0x33FFFFFF), RoundedCornerShape(30.dp))
-            .pointerInteropFilter { event ->
+            .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 val maxPos = if (isVertical) componentSize.height.toFloat() else componentSize.width.toFloat()
                 if (maxPos == 0f) return@pointerInteropFilter false
 
@@ -352,7 +355,9 @@ fun AnalogSlider(type: SliderType, label: String, onValue: (Short) -> Unit) {
                     }
                     else -> false
                 }
-            },
+            }
+            }
+,
         contentAlignment = Alignment.TopStart
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -388,7 +393,7 @@ fun Joystick(onMove: (Float, Float) -> Unit) {
         modifier = Modifier
             .size(150.dp)
             .onSizeChanged { componentSize = it }
-            .pointerInteropFilter { event ->
+            .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 val canvasCenter = Offset(componentSize.width / 2f, componentSize.height / 2f)
                 when (event.action) {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
@@ -415,6 +420,8 @@ fun Joystick(onMove: (Float, Float) -> Unit) {
                     else -> false
                 }
             }
+            }
+
     ) {
         val canvasCenter = Offset(size.width / 2f, size.height / 2f)
         if (thumbPosition == Offset.Zero) {
@@ -444,6 +451,34 @@ fun Joystick(onMove: (Float, Float) -> Unit) {
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
+val UpWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(size.width * 0.5f, size.height)
+    lineTo(0f, 0f)
+    lineTo(size.width, 0f)
+    close()
+}
+
+val DownWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(size.width * 0.5f, 0f)
+    lineTo(0f, size.height)
+    lineTo(size.width, size.height)
+    close()
+}
+
+val LeftWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(size.width, size.height * 0.5f)
+    lineTo(0f, 0f)
+    lineTo(0f, size.height)
+    close()
+}
+
+val RightWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(0f, size.height * 0.5f)
+    lineTo(size.width, 0f)
+    lineTo(size.width, size.height)
+    close()
+}
+
 @Composable
 fun DPad(onAxis: (Short, Short) -> Unit) {
     var dx by remember { mutableStateOf<Short>(0) }
@@ -455,54 +490,55 @@ fun DPad(onAxis: (Short, Short) -> Unit) {
 
     Box(
         modifier = Modifier
-            .size(140.dp)
+            .size(160.dp)
             .clip(CircleShape)
-            .background(BtnBg)
+            .background(Color(0x1AFFFFFF))
+            .border(2.dp, Color(0x33FFFFFF), CircleShape)
     ) {
-        // Up
-        DPadBtn(modifier = Modifier.align(Alignment.TopCenter).size(50.dp, 40.dp).offset(y = 10.dp)) {
-            dy = if (it) -32768 else 0; updateAxis()
-        }
-        // Down
-        DPadBtn(modifier = Modifier.align(Alignment.BottomCenter).size(50.dp, 40.dp).offset(y = (-10).dp)) {
-            dy = if (it) 32767 else 0; updateAxis()
-        }
-        // Left
-        DPadBtn(modifier = Modifier.align(Alignment.CenterStart).size(40.dp, 50.dp).offset(x = 10.dp)) {
-            dx = if (it) -32768 else 0; updateAxis()
-        }
-        // Right
-        DPadBtn(modifier = Modifier.align(Alignment.CenterEnd).size(40.dp, 50.dp).offset(x = (-10).dp)) {
-            dx = if (it) 32767 else 0; updateAxis()
-        }
-        
-        // Center piece
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(40.dp)
-                .background(Color(0x4D000000))
+                .size(130.dp)
+                .border(2.dp, Color(0x33FFFFFF), CircleShape)
         )
+        DPadBtn(
+            shape = UpWedgeShape,
+            modifier = Modifier.align(Alignment.TopCenter).size(60.dp, 60.dp).offset(y = 15.dp)
+        ) { dy = if (it) -32768 else 0; updateAxis() }
+        DPadBtn(
+            shape = DownWedgeShape,
+            modifier = Modifier.align(Alignment.BottomCenter).size(60.dp, 60.dp).offset(y = (-15).dp)
+        ) { dy = if (it) 32767 else 0; updateAxis() }
+        DPadBtn(
+            shape = LeftWedgeShape,
+            modifier = Modifier.align(Alignment.CenterStart).size(60.dp, 60.dp).offset(x = 15.dp)
+        ) { dx = if (it) -32768 else 0; updateAxis() }
+        DPadBtn(
+            shape = RightWedgeShape,
+            modifier = Modifier.align(Alignment.CenterEnd).size(60.dp, 60.dp).offset(x = (-15).dp)
+        ) { dx = if (it) 32767 else 0; updateAxis() }
     }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun DPadBtn(modifier: Modifier = Modifier, onEvent: (Boolean) -> Unit) {
+fun DPadBtn(shape: androidx.compose.ui.graphics.Shape, modifier: Modifier = Modifier, onEvent: (Boolean) -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (isPressed) 0.9f else 1f, tween(50), label = "scale")
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, tween(50), label = "scale")
     Box(
         modifier = modifier
             .scale(scale)
-            .clip(RoundedCornerShape(5.dp))
-            .background(if (isPressed) Color(0x6687CEFA) else Color(0x33000000)) // Light Sky Blue when pressed
-            .pointerInteropFilter { event ->
+            .clip(shape)
+            .background(if (isPressed) Color(0xFF4A90E2) else Color(0x00000000))
+            .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { isPressed = false; onEvent(false); true }
                     else -> false
                 }
             }
+            }
+
     )
 }
 
@@ -531,13 +567,15 @@ fun GamepadBtn(text: String, textColor: Color, modifier: Modifier = Modifier, on
             .clip(CircleShape)
             .background(if (isPressed) textColor.copy(alpha = 0.25f) else BtnBg) // Glows with its own color
             .border(1.dp, if (isPressed) textColor.copy(alpha = 0.5f) else BtnBorder, CircleShape)
-            .pointerInteropFilter { event ->
+            .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { isPressed = false; onEvent(false); true }
                     else -> false
                 }
-            },
+            }
+            }
+,
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -567,13 +605,15 @@ fun GamepadShoulder(text: String, isTrigger: Boolean, onEvent: (Boolean) -> Unit
             .clip(RoundedCornerShape(10.dp))
             .background(if (isPressed) BtnBgActive else BtnBg)
             .border(1.dp, BtnBorder, RoundedCornerShape(10.dp))
-            .pointerInteropFilter { event ->
+            .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { isPressed = false; onEvent(false); true }
                     else -> false
                 }
-            },
+            }
+            }
+,
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -597,13 +637,15 @@ fun GamepadMenuBtn(text: String, onEvent: (Boolean) -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(if (isPressed) BtnBgActive else BtnBg)
             .border(1.dp, BtnBorder, RoundedCornerShape(12.dp))
-            .pointerInteropFilter { event ->
+            .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { isPressed = false; onEvent(false); true }
                     else -> false
                 }
-            },
+            }
+            }
+,
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -629,13 +671,15 @@ fun GamepadGuideBtn(onEvent: (Boolean) -> Unit) {
             .clip(CircleShape)
             .background(if (isPressed) Color(0xFF111111) else Color(0xFF222222))
             .border(2.dp, Color(0xFF555555), CircleShape)
-            .pointerInteropFilter { event ->
+            .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { isPressed = false; onEvent(false); true }
                     else -> false
                 }
-            },
+            }
+            }
+,
         contentAlignment = Alignment.Center
     ) {
         val glowColor = if (isPressed) Color(0xFF39FF14) else Color(0xEEFFFFFF) // Neon green or bright white
