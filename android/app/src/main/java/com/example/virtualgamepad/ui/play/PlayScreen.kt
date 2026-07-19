@@ -529,7 +529,7 @@ fun DPadBtn(shape: androidx.compose.ui.graphics.Shape, modifier: Modifier = Modi
         modifier = modifier
             .scale(scale)
             .clip(shape)
-            .background(if (isPressed) Color(0xFF4A90E2) else Color(0x00000000))
+            .background(if (isPressed) Color(0xFF4A90E2) else Color(0x33000000)) // Visible translucent wedges
             .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
