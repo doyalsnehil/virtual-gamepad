@@ -283,6 +283,7 @@ fun DraggableComponent(
                                 change.consume()
                                 val dxDp = with(density) { (dragAmount.x * currentState.scale).toDp().value }
                                 val dyDp = with(density) { (dragAmount.y * currentState.scale).toDp().value }
+                                android.util.Log.d("DRAG_TEST", "Dragging! dx: $dxDp, currentScale: ${currentState.scale}, stateScale: ${state.scale}, newScale: ${currentState.copy(x = currentState.x + dxDp, y = currentState.y + dyDp).scale}")
                                 currentOnStateChange(currentState.copy(
                                     x = currentState.x + dxDp, 
                                     y = currentState.y + dyDp
@@ -295,7 +296,7 @@ fun DraggableComponent(
             )
     ) {
         // We capture touch events inside to prevent pointerInterop from eating the gesture during edit mode.
-        Box(modifier = Modifier.then(if (isEditMode) Modifier.pointerInput(Unit) { awaitPointerEventScope { while(true) { awaitPointerEvent(); /* eat event */ } } } else Modifier)) {
+        Box(modifier = Modifier.then(if (isEditMode) Modifier.pointerInput(Unit) { awaitPointerEventScope { while(true) { val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial); event.changes.forEach { it.consume() } } } } else Modifier)) {
             content()
         }
     }
