@@ -1,4 +1,5 @@
 package com.example.virtualgamepad.ui.play
+import androidx.compose.runtime.CompositionLocalProvider
 
 import android.view.MotionEvent
 import androidx.compose.animation.core.animateDpAsState
@@ -264,13 +265,12 @@ fun DraggableComponent(
     content: @Composable () -> Unit
 ) {
     val density = androidx.compose.ui.platform.LocalDensity.current
-    // state.x and state.y are stored as dp values to be screen-independent
-    var offsetX by remember(state.x) { mutableFloatStateOf(state.x) }
-    var offsetY by remember(state.y) { mutableFloatStateOf(state.y) }
+    val currentState by rememberUpdatedState(state)
+    val currentOnStateChange by rememberUpdatedState(onStateChange)
 
     Box(
         modifier = Modifier
-            .offset(x = offsetX.dp, y = offsetY.dp)
+            .offset(x = state.x.dp, y = state.y.dp)
             .scale(state.scale)
             .then(
                 if (isEditMode) {
@@ -281,11 +281,12 @@ fun DraggableComponent(
                         .pointerInput(Unit) {
                             detectDragGestures { change, dragAmount ->
                                 change.consume()
-                                val dxDp = with(density) { dragAmount.x.toDp().value }
-                                val dyDp = with(density) { dragAmount.y.toDp().value }
-                                offsetX += dxDp
-                                offsetY += dyDp
-                                onStateChange(state.copy(x = offsetX, y = offsetY))
+                                val dxDp = with(density) { (dragAmount.x * currentState.scale).toDp().value }
+                                val dyDp = with(density) { (dragAmount.y * currentState.scale).toDp().value }
+                                currentOnStateChange(currentState.copy(
+                                    x = currentState.x + dxDp, 
+                                    y = currentState.y + dyDp
+                                ))
                             }
                         }
                         .border(if (isSelected) 3.dp else 2.dp, if (isSelected) Color.Green else Color(0xAAFFFF00), RoundedCornerShape(8.dp))
