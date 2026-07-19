@@ -7,6 +7,7 @@ mod state;
 mod persistence;
 mod device;
 mod handlers;
+mod udp_handler;
 
 #[tokio::main]
 async fn main() {
@@ -22,7 +23,10 @@ async fn main() {
         .route("/api/ip", get(handlers::get_ips))
         .route("/ws", get(handlers::ws_handler))
         .fallback_service(ServeDir::new("../client"))
-        .with_state(state);
+        .with_state(state.clone());
+
+    // Spawn the UDP listener for the Android app
+    tokio::spawn(udp_handler::start_udp_server(state.clone()));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     println!("Server running on http://0.0.0.0:8000");

@@ -15,10 +15,20 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.keystore")
+            storePassword = "password"
+            keyAlias = "virtualgamepad"
+            keyPassword = "password"
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -81,4 +91,10 @@ dependencies {
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+  
+  // OkHttp for WebSockets
+  implementation("com.squareup.okhttp3:okhttp:4.12.0")
+  
+  // Serialization
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }

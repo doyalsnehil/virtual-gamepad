@@ -1,26 +1,37 @@
 package com.example.virtualgamepad
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.example.virtualgamepad.ui.main.MainScreen
+import com.example.virtualgamepad.ui.home.HomeScreen
+import com.example.virtualgamepad.ui.play.PlayScreen
+import com.example.virtualgamepad.ui.home.HomeScreen
+import com.example.virtualgamepad.ui.play.PlayScreen
 
 @Composable
 fun MainNavigation() {
-  val backStack = rememberNavBackStack(Main)
+  val backStack = rememberNavBackStack(Home)
 
   NavDisplay(
     backStack = backStack,
     onBack = { backStack.removeLastOrNull() },
     entryProvider =
       entryProvider {
-        entry<Main> {
-          MainScreen(onItemClick = { navKey -> backStack.add(navKey) }, modifier = Modifier.safeDrawingPadding().padding(16.dp))
+        entry<Home> {
+          HomeScreen(
+              serverUrl = "10.0.2.2:8000",
+              onPlay = { layoutId -> backStack.add(Play(layoutId)) },
+              onEdit = { layoutId -> backStack.add(Play(layoutId, isEditMode = true)) }
+          )
+        }
+        entry<Play> { play ->
+          PlayScreen(
+              serverUrl = "10.0.2.2:8000",
+              layoutId = play.layoutId,
+              isEditMode = play.isEditMode,
+              onExit = { backStack.removeLastOrNull() }
+          )
         }
       },
   )
