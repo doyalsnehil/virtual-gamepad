@@ -7,7 +7,7 @@ Turn your Android phone into a wireless gamepad for your Linux PC. This project 
 ## Project Structure
 
 ```text
-controller/
+
 ├── android/                 # Android Native Client (Kotlin/Compose)
 │   ├── app/                 # App module
 │   │   ├── src/             # Source code
