@@ -521,7 +521,7 @@ fun DPad(onAxis: (Short, Short) -> Unit) {
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(40.dp)
-                .background(Color(0x99000000))
+                .background(Color(0x1AFFFFFF))
         )
     }
 }
@@ -535,7 +535,7 @@ fun DPadBtn(modifier: Modifier = Modifier, onEvent: (Boolean) -> Unit) {
         modifier = modifier
             .scale(scale)
             .clip(RoundedCornerShape(5.dp))
-            .background(Color(0x99000000)) // Always visible dark color, glow is handled by DPad wedges
+            .background(Color(0x1AFFFFFF)) // Always visible dark color, glow is handled by DPad wedges
             .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
