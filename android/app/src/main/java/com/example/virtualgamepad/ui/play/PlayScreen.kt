@@ -450,8 +450,35 @@ fun Joystick(onMove: (Float, Float) -> Unit) {
     }
 }
 
+
+val UpWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(size.width * 0.5f, size.height * 0.5f)
+    lineTo(0f, 0f)
+    lineTo(size.width, 0f)
+    close()
+}
+val DownWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(size.width * 0.5f, size.height * 0.5f)
+    lineTo(0f, size.height)
+    lineTo(size.width, size.height)
+    close()
+}
+val LeftWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(size.width * 0.5f, size.height * 0.5f)
+    lineTo(0f, 0f)
+    lineTo(0f, size.height)
+    close()
+}
+val RightWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
+    moveTo(size.width * 0.5f, size.height * 0.5f)
+    lineTo(size.width, 0f)
+    lineTo(size.width, size.height)
+    close()
+}
+
 @Composable
 fun DPad(onAxis: (Short, Short) -> Unit) {
+
     var dx by remember { mutableStateOf<Short>(0) }
     var dy by remember { mutableStateOf<Short>(0) }
     
@@ -465,6 +492,13 @@ fun DPad(onAxis: (Short, Short) -> Unit) {
             .clip(CircleShape)
             .background(BtnBg)
     ) {
+        // Glows (behind buttons)
+        val glowColor = Color(0x664A90E2)
+        if (dy < 0) Box(modifier = Modifier.fillMaxSize().clip(UpWedgeShape).background(glowColor))
+        if (dy > 0) Box(modifier = Modifier.fillMaxSize().clip(DownWedgeShape).background(glowColor))
+        if (dx < 0) Box(modifier = Modifier.fillMaxSize().clip(LeftWedgeShape).background(glowColor))
+        if (dx > 0) Box(modifier = Modifier.fillMaxSize().clip(RightWedgeShape).background(glowColor))
+
         // Up
         DPadBtn(modifier = Modifier.align(Alignment.TopCenter).size(50.dp, 40.dp).offset(y = 10.dp)) {
             dy = if (it) -32768 else 0; updateAxis()
@@ -487,7 +521,7 @@ fun DPad(onAxis: (Short, Short) -> Unit) {
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(40.dp)
-                .background(Color(0x4D000000))
+                .background(Color(0x99000000))
         )
     }
 }
@@ -501,7 +535,7 @@ fun DPadBtn(modifier: Modifier = Modifier, onEvent: (Boolean) -> Unit) {
         modifier = modifier
             .scale(scale)
             .clip(RoundedCornerShape(5.dp))
-            .background(if (isPressed) Color(0xFF4A90E2) else Color(0x33000000))
+            .background(Color(0x99000000)) // Always visible dark color, glow is handled by DPad wedges
             .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
