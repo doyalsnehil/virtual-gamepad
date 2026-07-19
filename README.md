@@ -23,8 +23,6 @@ controller/
 │       ├── handlers.rs      # HTTP/WebSocket handlers
 │       ├── device.rs        # Virtual gamepad interface (uinput/evdev)
 │       └── ...              
-├── .gitignore
-└── README.md
 ```
 
 ## Requirements
