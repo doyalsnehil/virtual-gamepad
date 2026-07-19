@@ -267,37 +267,47 @@ fun DraggableComponent(
     val density = androidx.compose.ui.platform.LocalDensity.current
     val currentState by rememberUpdatedState(state)
     val currentOnStateChange by rememberUpdatedState(onStateChange)
+    
+    // Use local state for dragging to avoid stuttering due to async recomposition
+    var offsetX by androidx.compose.runtime.remember(state.id) { androidx.compose.runtime.mutableFloatStateOf(state.x) }
+    var offsetY by androidx.compose.runtime.remember(state.id) { androidx.compose.runtime.mutableFloatStateOf(state.y) }
+
+    // Sync from state if it changes externally (but ignore small diffs to prevent drag loops)
+    androidx.compose.runtime.LaunchedEffect(state.x, state.y) {
+        if (kotlin.math.abs(offsetX - state.x) > 1f) offsetX = state.x
+        if (kotlin.math.abs(offsetY - state.y) > 1f) offsetY = state.y
+    }
 
     Box(
         modifier = Modifier
-            .offset(x = state.x.dp, y = state.y.dp)
+            .offset(x = offsetX.dp, y = offsetY.dp)
             .scale(state.scale)
-            .then(
-                if (isEditMode) {
-                    Modifier
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = { onSelect() })
-                        }
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                val dxDp = with(density) { (dragAmount.x * currentState.scale).toDp().value }
-                                val dyDp = with(density) { (dragAmount.y * currentState.scale).toDp().value }
-                                android.util.Log.d("DRAG_TEST", "Dragging! dx: $dxDp, currentScale: ${currentState.scale}, stateScale: ${state.scale}, newScale: ${currentState.copy(x = currentState.x + dxDp, y = currentState.y + dyDp).scale}")
-                                currentOnStateChange(currentState.copy(
-                                    x = currentState.x + dxDp, 
-                                    y = currentState.y + dyDp
-                                ))
-                            }
-                        }
-                        .border(if (isSelected) 3.dp else 2.dp, if (isSelected) Color.Green else Color(0xAAFFFF00), RoundedCornerShape(8.dp))
-                        .padding(8.dp)
-                } else Modifier
-            )
     ) {
-        // We capture touch events inside to prevent pointerInterop from eating the gesture during edit mode.
-        Box(modifier = Modifier.then(if (isEditMode) Modifier.pointerInput(Unit) { awaitPointerEventScope { while(true) { val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial); event.changes.forEach { it.consume() } } } } else Modifier)) {
-            content()
+        content()
+
+        if (isEditMode) {
+            // Invisible overlay to intercept all gestures and show the selection border
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { onSelect() })
+                    }
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            val dxDp = with(density) { (dragAmount.x * currentState.scale).toDp().value }
+                            val dyDp = with(density) { (dragAmount.y * currentState.scale).toDp().value }
+                            offsetX += dxDp
+                            offsetY += dyDp
+                            currentOnStateChange(currentState.copy(
+                                x = offsetX, 
+                                y = offsetY
+                            ))
+                        }
+                    }
+                    .border(if (isSelected) 3.dp else 2.dp, if (isSelected) Color.Green else Color(0xAAFFFF00), RoundedCornerShape(8.dp))
+            )
         }
     }
 }
