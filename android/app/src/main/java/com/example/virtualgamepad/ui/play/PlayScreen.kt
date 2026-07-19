@@ -166,14 +166,10 @@ fun PlayScreen(serverUrl: String, layoutId: String, isEditMode: Boolean = false,
                 }
             ) {
                 when (comp.id) {
-                    "shoulder_l" -> Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        GamepadShoulder(text = "LT", isTrigger = true) { sendAxis("LT_ABS", if (it) 255 else 0) }
-                        GamepadShoulder(text = "LB", isTrigger = false) { sendButton("LB", it) }
-                    }
-                    "shoulder_r" -> Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        GamepadShoulder(text = "RB", isTrigger = false) { sendButton("RB", it) }
-                        GamepadShoulder(text = "RT", isTrigger = true) { sendAxis("RT_ABS", if (it) 255 else 0) }
-                    }
+                    "lt" -> GamepadShoulder(text = "LT", isTrigger = true) { sendAxis("LT_ABS", if (it) 255 else 0) }
+                    "lb" -> GamepadShoulder(text = "LB", isTrigger = false) { sendButton("LB", it) }
+                    "rb" -> GamepadShoulder(text = "RB", isTrigger = false) { sendButton("RB", it) }
+                    "rt" -> GamepadShoulder(text = "RT", isTrigger = true) { sendAxis("RT_ABS", if (it) 255 else 0) }
                     "menu" -> Row(
                         horizontalArrangement = Arrangement.spacedBy(24.dp),
                         verticalAlignment = Alignment.CenterVertically

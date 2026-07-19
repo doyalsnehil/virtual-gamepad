@@ -59,6 +59,29 @@ object LayoutManager {
             if (key.startsWith("layout_") && value is String) {
                 try {
                     val layout = Json.decodeFromString<GamepadLayout>(value)
+                    var migrated = false
+                    
+                    val l_index = layout.components.indexOfFirst { it.id == "shoulder_l" }
+                    if (l_index != -1) {
+                        val sl = layout.components[l_index]
+                        layout.components.removeAt(l_index)
+                        layout.components.add(l_index, ComponentState("lt", sl.x, sl.y, sl.scale))
+                        layout.components.add(l_index + 1, ComponentState("lb", sl.x + 96f * sl.scale, sl.y, sl.scale))
+                        migrated = true
+                    }
+                    val r_index = layout.components.indexOfFirst { it.id == "shoulder_r" }
+                    if (r_index != -1) {
+                        val sr = layout.components[r_index]
+                        layout.components.removeAt(r_index)
+                        layout.components.add(r_index, ComponentState("rb", sr.x, sr.y, sr.scale))
+                        layout.components.add(r_index + 1, ComponentState("rt", sr.x + 96f * sr.scale, sr.y, sr.scale))
+                        migrated = true
+                    }
+                    
+                    if (migrated) {
+                        saveLayout(layout)
+                    }
+                    
                     layouts.add(layout)
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -132,8 +155,10 @@ object LayoutManager {
             name = "Default Pad",
             type = "default",
             components = mutableListOf(
-                ComponentState("shoulder_l", 48f, 16f, 1f),
-                ComponentState("shoulder_r", 690f, 16f, 1f),
+                ComponentState("lt", 48f, 16f, 1f),
+                ComponentState("lb", 144f, 16f, 1f),
+                ComponentState("rb", 610f, 16f, 1f),
+                ComponentState("rt", 706f, 16f, 1f),
                 ComponentState("menu", 376f, 16f, 1f),
                 ComponentState("joystick_left", 32f, 120f, 1f),
                 ComponentState("dpad", 220f, 240f, 1f),
