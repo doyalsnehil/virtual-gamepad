@@ -450,35 +450,6 @@ fun Joystick(onMove: (Float, Float) -> Unit) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
-val UpWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
-    moveTo(size.width * 0.5f, size.height)
-    lineTo(0f, 0f)
-    lineTo(size.width, 0f)
-    close()
-}
-
-val DownWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
-    moveTo(size.width * 0.5f, 0f)
-    lineTo(0f, size.height)
-    lineTo(size.width, size.height)
-    close()
-}
-
-val LeftWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
-    moveTo(size.width, size.height * 0.5f)
-    lineTo(0f, 0f)
-    lineTo(0f, size.height)
-    close()
-}
-
-val RightWedgeShape = androidx.compose.foundation.shape.GenericShape { size, _ ->
-    moveTo(0f, size.height * 0.5f)
-    lineTo(size.width, 0f)
-    lineTo(size.width, size.height)
-    close()
-}
-
 @Composable
 fun DPad(onAxis: (Short, Short) -> Unit) {
     var dx by remember { mutableStateOf<Short>(0) }
@@ -490,46 +461,47 @@ fun DPad(onAxis: (Short, Short) -> Unit) {
 
     Box(
         modifier = Modifier
-            .size(160.dp)
+            .size(140.dp)
             .clip(CircleShape)
-            .background(Color(0x1AFFFFFF))
-            .border(2.dp, Color(0x33FFFFFF), CircleShape)
+            .background(BtnBg)
     ) {
+        // Up
+        DPadBtn(modifier = Modifier.align(Alignment.TopCenter).size(50.dp, 40.dp).offset(y = 10.dp)) {
+            dy = if (it) -32768 else 0; updateAxis()
+        }
+        // Down
+        DPadBtn(modifier = Modifier.align(Alignment.BottomCenter).size(50.dp, 40.dp).offset(y = (-10).dp)) {
+            dy = if (it) 32767 else 0; updateAxis()
+        }
+        // Left
+        DPadBtn(modifier = Modifier.align(Alignment.CenterStart).size(40.dp, 50.dp).offset(x = 10.dp)) {
+            dx = if (it) -32768 else 0; updateAxis()
+        }
+        // Right
+        DPadBtn(modifier = Modifier.align(Alignment.CenterEnd).size(40.dp, 50.dp).offset(x = (-10).dp)) {
+            dx = if (it) 32767 else 0; updateAxis()
+        }
+        
+        // Center piece
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(130.dp)
-                .border(2.dp, Color(0x33FFFFFF), CircleShape)
+                .size(40.dp)
+                .background(Color(0x4D000000))
         )
-        DPadBtn(
-            shape = UpWedgeShape,
-            modifier = Modifier.align(Alignment.TopCenter).size(60.dp, 60.dp).offset(y = 15.dp)
-        ) { dy = if (it) -32768 else 0; updateAxis() }
-        DPadBtn(
-            shape = DownWedgeShape,
-            modifier = Modifier.align(Alignment.BottomCenter).size(60.dp, 60.dp).offset(y = (-15).dp)
-        ) { dy = if (it) 32767 else 0; updateAxis() }
-        DPadBtn(
-            shape = LeftWedgeShape,
-            modifier = Modifier.align(Alignment.CenterStart).size(60.dp, 60.dp).offset(x = 15.dp)
-        ) { dx = if (it) -32768 else 0; updateAxis() }
-        DPadBtn(
-            shape = RightWedgeShape,
-            modifier = Modifier.align(Alignment.CenterEnd).size(60.dp, 60.dp).offset(x = (-15).dp)
-        ) { dx = if (it) 32767 else 0; updateAxis() }
     }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun DPadBtn(shape: androidx.compose.ui.graphics.Shape, modifier: Modifier = Modifier, onEvent: (Boolean) -> Unit) {
+fun DPadBtn(modifier: Modifier = Modifier, onEvent: (Boolean) -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, tween(50), label = "scale")
+    val scale by animateFloatAsState(if (isPressed) 0.9f else 1f, tween(50), label = "scale")
     Box(
         modifier = modifier
             .scale(scale)
-            .clip(shape)
-            .background(if (isPressed) Color(0xFF4A90E2) else Color(0x33000000)) // Visible translucent wedges
+            .clip(RoundedCornerShape(5.dp))
+            .background(if (isPressed) Color(0xFF4A90E2) else Color(0x33000000))
             .let { m -> if (LocalIsEditMode.current) m else m.pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> { isPressed = true; onEvent(true); true }
@@ -538,7 +510,6 @@ fun DPadBtn(shape: androidx.compose.ui.graphics.Shape, modifier: Modifier = Modi
                 }
             }
             }
-
     )
 }
 
