@@ -16,6 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import android.content.pm.ActivityInfo
 import android.app.Activity
 import androidx.compose.ui.draw.clip
@@ -55,13 +59,28 @@ val LocalIsEditMode = androidx.compose.runtime.compositionLocalOf { false }
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PlayScreen(serverUrl: String, layoutId: String, isEditMode: Boolean = false, onExit: () -> Unit) {
-    val activity = LocalContext.current as? Activity
+    val context = LocalContext.current
+    val view = LocalView.current
     
-    // Force Landscape on enter, restore normal orientation on exit
     DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        if (window != null) {
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            insetsController.hide(WindowInsetsCompat.Type.systemBars())
+        }
+        val activity = context as? Activity
+        val originalOrientation = activity?.requestedOrientation
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        
         onDispose {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            if (window != null) {
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                insetsController.show(WindowInsetsCompat.Type.systemBars())
+            }
+            if (originalOrientation != null) {
+                activity.requestedOrientation = originalOrientation
+            }
         }
     }
     
